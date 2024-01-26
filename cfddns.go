@@ -13,7 +13,10 @@ import (
 
 func main() {
 	var apiToken, zoneName, recordName, recordContent string
+	var verbose bool
 
+	// Parse command line flags
+	flag.BoolVar(&verbose, "verbose", false, "Verbose output")
 	flag.StringVar(&apiToken, "token", "", "Cloudflare API token")
 	flag.StringVar(&zoneName, "zone", "", "Zone name (e.g., example.com)")
 	flag.StringVar(&recordName, "record", "", "Record name to update (e.g., sub.example.com)")
@@ -59,8 +62,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, record := range records {
-		log.Printf("Found DNS record: %+v\n", record)
+	if verbose {
+		for _, record := range records {
+			log.Printf("Found DNS record: %+v\n", record)
+		}
 	}
 
 	// Update the DNS record
@@ -73,8 +78,10 @@ func main() {
 		Content: recordContent,
 		TTL:     record.TTL,
 	}
-	log.Printf(
-		"Updating DNS record %+v", upd)
+	if verbose {
+		log.Printf(
+			"Updating DNS record %+v", upd)
+	}
 	rec, err := api.UpdateDNSRecord(context.Background(), zi, upd)
 
 	if err != nil {
@@ -82,10 +89,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	j, err := json.MarshalIndent(rec, "", "  ")
-	if err != nil {
-		log.Println("Error marshalling DNS record:", err)
-		os.Exit(1)
+	if verbose {
+		j, err := json.MarshalIndent(rec, "", "  ")
+		if err != nil {
+			log.Println("Error marshalling DNS record:", err)
+			os.Exit(1)
+		}
+
+		log.Printf("Updated DNS record: %s\n", j)
 	}
-	log.Printf("DNS record updated successfully: \n %s\n", j)
 }
